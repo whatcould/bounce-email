@@ -1,0 +1,35 @@
+
+For more information on bounce-email, see http://bounce-email.rubyforge.org
+
+You can easily use this plugin with e.g. Rails application.
+Configure rails, so it send email using postfix and it adds VERP.
+#- in environment.rb file add lines -#
+config.action_mailer.delivery_method = :sendmail
+config.action_mailer.sendmail_settings = {
+  :location       => '/usr/sbin/sendmail',
+  :arguments      => '-XV -f bounces-main@amerimail.lv -i -t'
+}
+#- end -#
+Change amerimail.lv to email server that will handle bounce emails.
+
+Follow this tutorial to handle bounce-emails: http://keakaj.com/wisdom/2007/08/08/verp-on-rails/
+
+You can make Ruby file like this:
+require "rubygems"
+require "tmail"
+require "bounce-email"
+
+mail = TMail::Mail.parse(STDIN.read)
+bounce = BounceEmail::Mail.new(mail)
+
+# Do something with bounce info
+# bounce.isbounce -> true/false
+# bounce.code -> e.g. "5.1.1"
+# bounce.reason -> e.g. "Something about the address specified in the message caused this DSN."
+# bounce.type -> e.g. "Permanent Failure"
+
+# Permanent Failure means that it is hard bounce
+# Persistent Transient Failure means that it is soft bounce
+
+# If reason is "Vacation auto-reply" then email could be vacation email (but it is rearly cought).
+
