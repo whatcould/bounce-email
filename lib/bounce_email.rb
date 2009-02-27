@@ -3,6 +3,10 @@ $:.unshift(File.dirname(__FILE__)) unless
 
 module BounceEmail
   VERSION = '0.0.1'
+  TYPE_HARD_FAIL = 'Permanent Failure'
+  TYPE_SOFT_FAIL = 'Persistent Transient Failure'
+  TYPE_SUCCESS   = 'Success'
+  
   #    I used quite much from http://www.phpclasses.org/browse/package/2691.html
       require 'tmail'
       class Mail
@@ -20,12 +24,12 @@ module BounceEmail
                   end
 
                   # Try to GET status code from txt
-                  @code = getStatusFromTxt(mail.body) if (@code.nil? || @code.blank?) && @reason.blank?
+                  @code = get_status_from_text(mail.body) if (@code.nil? || @code.blank?) && @reason.blank?
                   @reason = "unknown" if @code.blank?
 
                   if @reason.blank?
-                      @type = getTypeFromStatusCode(@code[0].chr.to_i)
-                      @reason = getReasonFromStatusCode(@code.gsub(/\./,'')[1..2])
+                      @type = get_type_from_status_code(@code[0].chr.to_i)
+                      @reason = get_reason_from_status_code(@code.gsub(/\./,'')[1..2])
                   end
               end
               rescue
@@ -33,7 +37,7 @@ module BounceEmail
           end
 
           private
-          def getStatusFromTxt(email)
+          def get_status_from_text(email)
               #=begin
               # This function is taken from PHP Bounce Handler class (http://www.phpclasses.org/browse/package/2691.html)
               # Author: Chris Fortune
@@ -85,7 +89,7 @@ module BounceEmail
               end
           end
 
-          def getReasonFromStatusCode(code)
+          def get_reason_from_status_code(code)
               array = {}
               array['00'] =  "Other undefined status is the only undefined error code. It should be used for all errors for which only the class of the error is known."
               array['10'] =  "Something about the address specified in the message caused this DSN."
@@ -141,14 +145,14 @@ module BounceEmail
               return res
           end
 
-          def getTypeFromStatusCode(code) 
+          def get_type_from_status_code(code) 
               case code
                  when 5
-                     return "Permanent Failure"
+                     return TYPE_HARD_FAIL
                  when 4
-                     return "Persistent Transient Failure"
+                     return TYPE_SOFT_FAIL
                  when 2
-                     return "Success"
+                     return TYPE_SUCCESS
               end
           end
 
