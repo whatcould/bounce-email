@@ -4,7 +4,7 @@ http://bounce-email.rubyforge.org/
 
 == DESCRIPTION:
 
-This Ruby library is for determining the bounce type of an email message. It finds out if bounce is hard or soft or it is out of office mail.
+This Ruby library is for determining the bounce type of an email message. It determines whether the bounce is hard or soft, if is an "out of office mail", etc.
 
 == FEATURES/PROBLEMS:
 
@@ -14,19 +14,19 @@ This Ruby library is for determining the bounce type of an email message. It fin
 
 Follow this tutorial to handle bounce-emails: http://keakaj.com/wisdom/2007/08/08/verp-on-rails/
 
-You can make Ruby file like this:
-require "rubygems"
-require "tmail"
-require "bounce-email"
+Basic usage:
+ require "rubygems"
+ require "tmail"
+ require "bounce-email"
 
-mail = TMail::Mail.parse(STDIN.read)
-bounce = BounceEmail::Mail.new(mail)
+ mail = TMail::Mail.parse(STDIN.read) # feed it the full text of an incoming message
+ bounce = BounceEmail::Mail.new(mail)
 
-# Do something with bounce info
-# bounce.isbounce -> true/false
-# bounce.code -> e.g. "5.1.1"
-# bounce.reason -> e.g. "Something about the address specified in the message caused this DSN."
-# bounce.type -> e.g. "Permanent Failure"
+ # Do something with bounce info
+ bounce.isbounce # true/false
+ bounce.code # e.g. "5.1.1"
+ bounce.reason # e.g. "Something about the address specified in the message caused this DSN."
+ bounce.type  #  "Permanent Failure", "Persistent Transient Failure", "Success" -- BounceEmail::TYPE_HARD_FAIL, TYPE_SOFT_FAIL, TYPE_SUCCESS
 
 == REQUIREMENTS:
 
@@ -35,6 +35,12 @@ Ruby Gem TMail is required
 == INSTALL:
 
 Nothing to install.
+
+== CONTRIBUTIONS:
+
+http://github.com/whatcould/bounce-email/tree/master
+
+Please fork on github & add new conditions under "get_status_from_text" if you discover creative new mailserver responses.
 
 == LICENSE:
 
