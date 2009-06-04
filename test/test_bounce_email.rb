@@ -10,7 +10,7 @@ class TestBounceEmail < Test::Unit::TestCase
   
   def test_bounce_type_soft_fail
     bounce = test_bounce('tt_bounce_10')
-    bounce.code = '4.0.0'
+    assert bounce.code == '4.0.0'
     assert bounce.type == BounceEmail::TYPE_SOFT_FAIL
   end
   
