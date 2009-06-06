@@ -1,5 +1,5 @@
 
-For more information on bounce-email, see http://bounce-email.rubyforge.org
+For more information on bounce_email, see http://bounce-email.rubyforge.org
 
 You can easily use this plugin with e.g. Rails application.
 Configure rails, so it send email using postfix and it adds VERP.
@@ -17,7 +17,7 @@ Follow this tutorial to handle bounce-emails: http://keakaj.com/wisdom/2007/08/0
 You can make Ruby file like this:
 require "rubygems"
 require "tmail"
-require "bounce-email"
+require "bounce_email"
 
 mail = TMail::Mail.parse(STDIN.read)
 bounce = BounceEmail::Mail.new(mail)
