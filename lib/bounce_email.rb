@@ -7,6 +7,9 @@ module BounceEmail
   TYPE_SOFT_FAIL = 'Persistent Transient Failure'
   TYPE_SUCCESS   = 'Success'
 
+  #qmail  
+  #RFC
+  
   #    I used quite much from http://www.phpclasses.org/browse/package/2691.html
   require 'tmail'
   class Mail
@@ -36,7 +39,10 @@ module BounceEmail
 
     private
     def get_code(mail)
-      return '99' if mail.subject.match(/auto.*reply|vacation|vocation|(out|away).*office|on holiday/i)
+      return '97' if mail.subject.match(/delayed/i)
+      return '98' if mail.subject.match(/(unzulässiger|unerlaubter) anhang/i)
+      return '99' if mail.subject.match(/auto.*reply|vacation|vocation|(out|away).*office|on holiday|abwesenheits|autorespond|Automatische|eingangsbestätigung/i)
+      
       unless mail.parts.empty?
         code = mail.parts[1].body.match(/Status: ([0-9.]{0,})/)[1]
         return code if code
@@ -51,9 +57,9 @@ module BounceEmail
       # Big thanks goes to him
       # I transled them to Ruby and added some my parts
       #=end
-      return "5.1.1" if email.match(/no such address|Recipient address rejected|User unknown in virtual alias table|The recipient was unavailable to take delivery of the message|Sorry, no mailbox here by that name/i)        
+      return "5.1.1" if email.match(/no such (address|user)|Recipient address rejected|User unknown in virtual alias table|The recipient was unavailable to take delivery of the message|Sorry, no mailbox here by that name|invalid address|unknown user|unknown local part|user not found|invalid recipient|failed after I sent the message|did not reach the following recipient|nicht zugestellt werden/i)        
       return "5.1.2" if email.match(/unrouteable mail domain|Esta casilla ha expirado por falta de uso|I couldn't find any host named/i)        
-      if email.match(/mailbox is full|Mailbox quota usage exceeded|User mailbox exceeds allowed size|Message rejected\. Not enough storage space/i) # AA added 4th or
+      if email.match(/mailbox is full|Mailbox quota (usage|disk) exceeded|quota exceeded|User mailbox exceeds allowed size|Message rejected\. Not enough storage space|user has exhausted allowed storage space|too many messages on the server|mailbox is over quota|mailbox exceeds allowed size/i) # AA added 4th or
         return "5.2.2" if email.match(/This is a permanent error/i) # AA added this  
         return "4.2.2"
       end
@@ -63,16 +69,17 @@ module BounceEmail
       return "4.4.7" if email.match(/retry timeout exceeded/i)        
       return "5.2.0" if email.match(/The account or domain may not exist, they may be blacklisted, or missing the proper dns entries./i)        
       return "5.5.4" if email.match(/554 TRANSACTION FAILED/i)        
-      return "4.4.1" if email.match(/Status: 4\.4\.1|delivery temporarily suspended/i)
+      return "4.4.1" if email.match(/Status: 4.4.1|delivery temporarily suspended/i)
       return "5.5.0" if email.match(/550 OU\-002|Mail rejected by Windows Live Hotmail for policy reasons/i)        
       return "5.1.2" if email.match(/PERM_FAILURE: DNS Error: Domain name not found/i)        
       return "4.2.0" if email.match(/Delivery attempts will continue to be made for/i)        
       return "5.5.4" if email.match(/554 delivery error:/i)
-      return "5.1.1" if email.match(/550-5\.1\.1|This Gmail user does not exist\./i)        
+      return "5.1.1" if email.match(/550-5.1.1|This Gmail user does not exist/i)        
       return "5.7.1" if email.match(/5.7.1 Your message.*?was blocked by ROTA DNSBL/i) # AA added        
       return "5.3.2" if email.match(/Technical details of permanent failure/i)  && (email.match(/The recipient server did not accept our requests to connect/i) || email.match(/Connection was dropped by remote host/i) || email.match(/Could not initiate SMTP conversation/i)) # AA added        
       return "4.3.2" if email.match(/Technical details of temporary failure/i) && (email.match(/The recipient server did not accept our requests to connect/i) || email.match(/Connection was dropped by remote host/i) || email.match(/Could not initiate SMTP conversation/i)) # AA added        
       return "5.0.0" if email.match(/Delivery to the following recipient failed permanently/i) # AA added
+      return '5.2.3' if email.match(/account closed|account has been disabled or discontinued|mailbox not found|prohibited by administrator|access denied|account does not exist/i)
     end
 
     def get_reason_from_status_code(code)
@@ -126,6 +133,9 @@ module BounceEmail
       array['75'] =  "A transport system otherwise authorized to validate or decrypt a message in transport was unable to do so because necessary information such as key was not available or such information was invalid."
       array['76'] =  "A transport system otherwise authorized to validate or decrypt a message was unable to do so because the necessary algorithm was not supported. "
       array['77'] =  "A transport system otherwise authorized to validate a message was unable to do so because the message was corrupted or altered.  This may be useful as a permanent, transient persistent, or successful delivery code."
+      #custom codes
+      array['97'] =  "Delayed"
+      array['98'] =  "Not allowed Attachment"
       array['99'] =  "Vacation auto-reply"
       code = code.gsub(/\./,'')[1..2]
       array[code] || "unknown"
@@ -143,7 +153,7 @@ module BounceEmail
 
     def check_if_bounce(mail)
       return true if mail.subject.match(/((returned|undelivered) mail)|(mail delivery)( failed)?|(delivery )(status notification|failure)|(failure notice)|(undeliver(able|ed)( mail)?)|(return(ing message|ed) to sender)|auto.*reply|vacation|vocation|(out|away).*office|on holiday/i)
-      return true if mail['precedence'].to_s.match(/(auto_reply|autoreply)/i)
+      return true if mail['precedence'].to_s.match(/auto.*(reply|responder|antwort)/i)
       return true if mail.from.to_s.match(/^(MAILER-DAEMON|POSTMASTER)\@/i)
       false
     end
