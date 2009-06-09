@@ -43,8 +43,8 @@ module BounceEmail
       return '98' if mail.subject.match(/(unzulässiger|unerlaubter) anhang/i)
       return '99' if mail.subject.match(/auto.*reply|vacation|vocation|(out|away).*office|on holiday|abwesenheits|autorespond|Automatische|eingangsbestätigung/i)
       
-      unless mail.parts.empty?
-        code = mail.parts[1].body.match(/Status: ([0-9.]{0,})/)[1]
+      if mail.parts[1]
+        code = mail.parts[1].body.match(/(Status:.|550 |#)([0-9.]{0,3})/)[2]
         return code if code
       end
       get_status_from_text(mail.body)
@@ -57,26 +57,28 @@ module BounceEmail
       # Big thanks goes to him
       # I transled them to Ruby and added some my parts
       #=end
-      return "5.1.1" if email.match(/no such (address|user)|Recipient address rejected|User unknown in virtual alias table|The recipient was unavailable to take delivery of the message|Sorry, no mailbox here by that name|invalid address|unknown user|unknown local part|user not found|invalid recipient|failed after I sent the message|did not reach the following recipient|nicht zugestellt werden/i)        
+      return "5.1.1" if email.match(/no such (address|user)|Recipient address rejected|User unknown|does not like recipient|The recipient was unavailable to take delivery of the message|Sorry, no mailbox here by that name|invalid address|unknown user|unknown local part|user not found|invalid recipient|failed after I sent the message|did not reach the following recipient|nicht zugestellt werden/i)        
       return "5.1.2" if email.match(/unrouteable mail domain|Esta casilla ha expirado por falta de uso|I couldn't find any host named/i)        
-      if email.match(/mailbox is full|Mailbox quota (usage|disk) exceeded|quota exceeded|User mailbox exceeds allowed size|Message rejected\. Not enough storage space|user has exhausted allowed storage space|too many messages on the server|mailbox is over quota|mailbox exceeds allowed size/i) # AA added 4th or
+      if email.match(/mailbox is full|Mailbox quota (usage|disk) exceeded|quota exceeded|Over quota|User mailbox exceeds allowed size|Message rejected\. Not enough storage space|user has exhausted allowed storage space|too many messages on the server|mailbox is over quota|mailbox exceeds allowed size/i) # AA added 4th or
         return "5.2.2" if email.match(/This is a permanent error/i) # AA added this  
         return "4.2.2"
       end
+      return "5.1.0" if email.match(/Address rejected/)
+      return "4.1.2" if email.match(/I couldn't find any host by that name/)
       return "4.2.0" if email.match(/not yet been delivered/i)        
-      return "5.2.0" if email.match(/mailbox unavailable/i)        
+      return "5.2.0" if email.match(/mailbox unavailable|No such mailbox/i)        
       return "5.4.4" if email.match(/Unrouteable address/i)        
       return "4.4.7" if email.match(/retry timeout exceeded/i)        
       return "5.2.0" if email.match(/The account or domain may not exist, they may be blacklisted, or missing the proper dns entries./i)        
       return "5.5.4" if email.match(/554 TRANSACTION FAILED/i)        
-      return "4.4.1" if email.match(/Status: 4.4.1|delivery temporarily suspended/i)
+      return "4.4.1" if email.match(/Status: 4.4.1|delivery temporarily suspended|wasn't able to establish an SMTP connection/i)
       return "5.5.0" if email.match(/550 OU\-002|Mail rejected by Windows Live Hotmail for policy reasons/i)        
       return "5.1.2" if email.match(/PERM_FAILURE: DNS Error: Domain name not found/i)        
       return "4.2.0" if email.match(/Delivery attempts will continue to be made for/i)        
       return "5.5.4" if email.match(/554 delivery error:/i)
       return "5.1.1" if email.match(/550-5.1.1|This Gmail user does not exist/i)        
       return "5.7.1" if email.match(/5.7.1 Your message.*?was blocked by ROTA DNSBL/i) # AA added        
-      return "5.3.2" if email.match(/Technical details of permanent failure/i)  && (email.match(/The recipient server did not accept our requests to connect/i) || email.match(/Connection was dropped by remote host/i) || email.match(/Could not initiate SMTP conversation/i)) # AA added        
+      return "5.3.2" if email.match(/Technical details of permanent failure|Too many bad recipients/i)  && (email.match(/The recipient server did not accept our requests to connect/i) || email.match(/Connection was dropped by remote host/i) || email.match(/Could not initiate SMTP conversation/i)) # AA added        
       return "4.3.2" if email.match(/Technical details of temporary failure/i) && (email.match(/The recipient server did not accept our requests to connect/i) || email.match(/Connection was dropped by remote host/i) || email.match(/Could not initiate SMTP conversation/i)) # AA added        
       return "5.0.0" if email.match(/Delivery to the following recipient failed permanently/i) # AA added
       return '5.2.3' if email.match(/account closed|account has been disabled or discontinued|mailbox not found|prohibited by administrator|access denied|account does not exist/i)
@@ -152,7 +154,8 @@ module BounceEmail
     end
 
     def check_if_bounce(mail)
-      return true if mail.subject.match(/((returned|undelivered) mail)|(mail delivery)( failed)?|(delivery )(status notification|failure)|(failure notice)|(undeliver(able|ed)( mail)?)|(return(ing message|ed) to sender)|auto.*reply|vacation|vocation|(out|away).*office|on holiday/i)
+      return true if mail.subject.match(/(returned|undelivered) mail|mail delivery( failed)?|(delivery )(status notification|failure)|failure notice|undeliver(able|ed)( mail)?|return(ing message|ed) to sender/i)
+      return true if mail.subject.match(/auto.*reply|vacation|vocation|(out|away).*office|on holiday|abwesenheits|autorespond|Automatische|eingangsbestätigung/i)
       return true if mail['precedence'].to_s.match(/auto.*(reply|responder|antwort)/i)
       return true if mail.from.to_s.match(/^(MAILER-DAEMON|POSTMASTER)\@/i)
       false
@@ -161,6 +164,13 @@ module BounceEmail
     def get_original_mail(mail) #worked alright for me, for sure this as to be extended
       parts = mail.body.split("--- Below this line is a copy of the message.\r\n\r\n")
       return TMail::Mail.parse(parts.last) if parts.size > 1
+      begin 
+        if mail.parts
+          body = mail.parts[2].body
+          return TMail::Mail.parse(body) 
+        end  
+      rescue => e
+      end      
       nil
     end
 
