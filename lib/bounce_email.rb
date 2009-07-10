@@ -8,7 +8,9 @@ module BounceEmail
   TYPE_SUCCESS   = 'Success'
 
   #qmail  
-  #RFC
+  # Status codes are defined in rfc3463, http://www.ietf.org/rfc/rfc3463.txt
+  # For code formatting, see http://www.ietf.org/rfc/rfc3463.txt
+  # Some Exchange servers format codes as "[...] #0.0.0>", see http://support.microsoft.com/kb/284204
   
   #    I used quite much from http://www.phpclasses.org/browse/package/2691.html
   require 'tmail'
@@ -44,7 +46,7 @@ module BounceEmail
       return '99' if mail.subject.match(/auto.*reply|vacation|vocation|(out|away).*office|on holiday|abwesenheits|autorespond|Automatische|eingangsbestätigung/i)
       
       if mail.parts[1]
-        code = mail.parts[1].body.match(/(Status:.|550 |#)([0-9.]{0,3})/)[2]
+        code = mail.parts[1].body.match(/(Status:.|550 |#)([245]\.[0-9]{1,3}\.[0-9]{1,3})/)[2]
         return code if code
       end
       get_status_from_text(mail.body)

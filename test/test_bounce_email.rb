@@ -4,40 +4,39 @@ class TestBounceEmail < Test::Unit::TestCase
 
   def test_bounce_type_hard_fail
     bounce = test_bounce('tt_bounce_01')
-    assert bounce.code == '5.1.2'
+    assert bounce.code == '5.1.2', "Code should return 5.1.2, returns #{bounce.code}"
     assert bounce.type == BounceEmail::TYPE_HARD_FAIL
   end
   
   def test_bounce_type_soft_fail
     bounce = test_bounce('tt_bounce_10')
-    assert bounce.code == '4.0.0'
+    assert bounce.code == '4.0.0', "Code should return 4.0.0, returns #{bounce.code}"
     assert bounce.type == BounceEmail::TYPE_SOFT_FAIL
   end
   
   #  Specific tests
-  
   def test_unrouteable_mail_domain
     bounce = test_bounce('tt_bounce_01')
-    assert bounce.code == '5.1.2'
+    assert bounce.code == '5.1.2', "Code should return 5.1.2, returns #{bounce.code}"
 
     bounce = test_bounce('tt_bounce_02')
-    assert bounce.code == '5.1.2'
+    assert bounce.code == '5.1.2', "Code should return 5.1.2, returns #{bounce.code}"
   end
   
   def test_set_5_0_status
     bounce = test_bounce('tt_bounce_03')
-    assert bounce.code == '5.0.0'
+    assert bounce.code == '5.0.0', "Code should return 5.0.0, returns #{bounce.code}"
 
     bounce = test_bounce('tt_bounce_04')
-    assert bounce.code == '5.0.0'
+    assert bounce.code == '5.0.0', "Code should return 5.0.0, returns #{bounce.code}"
     
     bounce = test_bounce('tt_bounce_05')
-    assert bounce.code == '5.0.0'
+    assert bounce.code == '5.0.0', "Code should return 5.0.0, returns #{bounce.code}"
   end
 
   def test_rota_dnsbl # TODO make this more general (match DNSBL only?)
     bounce = test_bounce('tt_bounce_06')
-    assert bounce.code == '5.7.1'
+    assert bounce.code == '5.7.1', "Code should return 5.7.1, returns #{bounce.code}"
   end
   
   # this test email suggests the library fails on this email;
