@@ -22,7 +22,7 @@ module BounceEmail
     def is_bounce?
       @is_bounce ||= check_if_bounce(@mail)
     end
-
+  
     def original_mail
       @original_mail ||= get_original_mail(@mail)
     end
