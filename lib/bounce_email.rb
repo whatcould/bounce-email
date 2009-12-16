@@ -40,16 +40,24 @@ module BounceEmail
     end
 
     private
+    
     def get_code(mail)
       return '97' if mail.subject.match(/delayed/i)
       return '98' if mail.subject.match(/(unzulässiger|unerlaubter) anhang/i)
       return '99' if mail.subject.match(/auto.*reply|vacation|vocation|(out|away).*office|on holiday|abwesenheits|autorespond|Automatische|eingangsbestätigung/i)
       
       if mail.parts[1]
-        code = mail.parts[1].body.match(/(Status:.|550 |#)([245]\.[0-9]{1,3}\.[0-9]{1,3})/)[2]
+        match_parts = mail.parts[1].body.match(/(Status:.|550 |#)([245]\.[0-9]{1,3}\.[0-9]{1,3})/)
+        code = match_parts[2] if match_parts
         return code if code
       end
-      get_status_from_text(mail.body)
+      
+      # Now try getting it from correct part of tmail
+      code = get_status_from_text(mail.body)
+      return code if code
+      
+      # OK getting desperate so try getting code from entire email
+      code = get_status_from_text(mail.to_s)      
     end
 
     def get_status_from_text(email)

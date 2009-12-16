@@ -60,4 +60,10 @@ class TestBounceEmail < Test::Unit::TestCase
     bounce = test_bounce('tt_bounce_10')
     assert bounce.code == '4.0.0'
   end
+  
+  # Added because kept getting errors with malformed bounce messages
+  def test_malformed_bounce
+    bounce = test_bounce('malformed_bounce_01')
+    assert bounce.code == '5.1.1'
+  end
 end
