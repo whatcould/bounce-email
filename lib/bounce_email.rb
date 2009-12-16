@@ -6,7 +6,7 @@ module BounceEmail
   TYPE_HARD_FAIL = 'Permanent Failure'
   TYPE_SOFT_FAIL = 'Persistent Transient Failure'
   TYPE_SUCCESS   = 'Success'
-
+ 
   #qmail  
   # Status codes are defined in rfc3463, http://www.ietf.org/rfc/rfc3463.txt
   # For code formatting, see http://www.ietf.org/rfc/rfc3463.txt
