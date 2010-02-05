@@ -66,4 +66,12 @@ class TestBounceEmail < Test::Unit::TestCase
     bounce = test_bounce('malformed_bounce_01')
     assert bounce.code == '5.1.1'
   end
+  
+  # Added because kept getting errors with unknown code messages
+  def test_unknown_code
+    bounce = test_bounce('unknown_code_bounce_01')
+    assert bounce.code == nil
+    assert bounce.is_bounce? == true
+    assert bounce.type == 'abc'
+  end
 end

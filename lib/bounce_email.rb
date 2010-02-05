@@ -28,11 +28,11 @@ module BounceEmail
     end
 
     def reason
-      @reason ||= get_reason_from_status_code(code)
+      @reason ||= get_reason_from_status_code(code) unless code.nil?
     end
 
     def type
-      @type ||= get_type_from_status_code(code)
+      @type ||= get_type_from_status_code(code) unless code.nil?
     end
 
     def code
