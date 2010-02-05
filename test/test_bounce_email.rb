@@ -72,7 +72,7 @@ class TestBounceEmail < Test::Unit::TestCase
     bounce = test_bounce('unknown_code_bounce_01')
     assert bounce.is_bounce? == true
     assert bounce.code == 'unknown'
-    assert bounce.type == 'unknown'
+    assert bounce.type == BounceEmail::TYPE_HARD_FAIL
     assert bounce.reason == 'unknown'
   end
 end

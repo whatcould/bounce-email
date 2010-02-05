@@ -156,7 +156,7 @@ module BounceEmail
     end
 
     def get_type_from_status_code(code)
-      return 'unknown' if code.nil? or code == 'unknown'
+      return TYPE_HARD_FAIL if code.nil? or code == 'unknown'
       pre_code = code[0].chr.to_i
       array = {}      
       array[5] = TYPE_HARD_FAIL
