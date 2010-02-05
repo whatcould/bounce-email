@@ -28,11 +28,11 @@ module BounceEmail
     end
 
     def reason
-      @reason ||= get_reason_from_status_code(code) unless code.nil?
+      @reason ||= get_reason_from_status_code(code)
     end
 
     def type
-      @type ||= get_type_from_status_code(code) unless code.nil?
+      @type ||= get_type_from_status_code(code)
     end
 
     def code
@@ -57,7 +57,8 @@ module BounceEmail
       return code if code
       
       # OK getting desperate so try getting code from entire email
-      code = get_status_from_text(mail.to_s)      
+      code = get_status_from_text(mail.to_s)
+      code || 'unknown'
     end
 
     def get_status_from_text(email)
@@ -95,6 +96,7 @@ module BounceEmail
     end
 
     def get_reason_from_status_code(code)
+      return 'unknown' if code.nil? or code == 'unknown'
       array = {}
       array['00'] =  "Other undefined status is the only undefined error code. It should be used for all errors for which only the class of the error is known."
       array['10'] =  "Something about the address specified in the message caused this DSN."
@@ -154,6 +156,7 @@ module BounceEmail
     end
 
     def get_type_from_status_code(code)
+      return 'unknown' if code.nil? or code == 'unknown'
       pre_code = code[0].chr.to_i
       array = {}      
       array[5] = TYPE_HARD_FAIL
