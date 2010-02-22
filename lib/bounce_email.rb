@@ -1,8 +1,9 @@
+# encoding: UTF-8
 $:.unshift(File.dirname(__FILE__)) unless
 $:.include?(File.dirname(__FILE__)) || $:.include?(File.expand_path(File.dirname(__FILE__)))
 
 module BounceEmail
-  VERSION = '0.0.2'
+  VERSION = '0.0.3'
   TYPE_HARD_FAIL = 'Permanent Failure'
   TYPE_SOFT_FAIL = 'Persistent Transient Failure'
   TYPE_SUCCESS   = 'Success'
@@ -13,7 +14,7 @@ module BounceEmail
   # Some Exchange servers format codes as "[...] #0.0.0>", see http://support.microsoft.com/kb/284204
   
   #    I used quite much from http://www.phpclasses.org/browse/package/2691.html
-  require 'tmail'
+  require 'mail'
   class Mail
     def initialize(mail) # You have to pass TMail object
       @mail = mail
@@ -176,11 +177,11 @@ module BounceEmail
 
     def get_original_mail(mail) #worked alright for me, for sure this as to be extended
       parts = mail.body.split("--- Below this line is a copy of the message.\r\n\r\n")
-      return TMail::Mail.parse(parts.last) if parts.size > 1
+      return Mail.parse(parts.last) if parts.size > 1
       begin 
         if mail.parts
           body = mail.parts[2].body
-          return TMail::Mail.parse(body) 
+          return Mail.parse(body) 
         end  
       rescue => e
       end      
