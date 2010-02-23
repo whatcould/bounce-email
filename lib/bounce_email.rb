@@ -44,8 +44,8 @@ module BounceEmail
     
     def get_code(mail)
       return '97' if mail.subject.match(/delayed/i)
-      return '98' if mail.subject.match(/(unzulässiger|unerlaubter) anhang/i)
-      return '99' if mail.subject.match(/auto.*reply|vacation|vocation|(out|away).*office|on holiday|abwesenheits|autorespond|Automatische|eingangsbestätigung/i)
+      return '98' if mail.subject.encode('utf-8').match(/(unzulässiger|unerlaubter) anhang/i)
+      return '99' if mail.subject.encode('utf-8').match(/auto.*reply|vacation|vocation|(out|away).*office|on holiday|abwesenheits|autorespond|Automatische|eingangsbestätigung/i)
       
       if mail.parts[1]
         match_parts = mail.parts[1].body.match(/(Status:.|550 |#)([245]\.[0-9]{1,3}\.[0-9]{1,3})/)
