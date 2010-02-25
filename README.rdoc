@@ -30,7 +30,8 @@ Basic usage:
 
 == REQUIREMENTS:
 
-Ruby Gem TMail is required
+Ruby 1.9
+Ruby Gem Mail is required
 
 == INSTALL:
 
@@ -41,6 +42,8 @@ Nothing to install.
 http://github.com/whatcould/bounce-email/tree/master
 
 Please fork on github & add new conditions under "get_status_from_text" if you discover creative new mailserver responses.
+
+Updated by Pedro Visintin 2010
 
 == LICENSE:
 
