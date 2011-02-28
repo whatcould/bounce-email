@@ -1,7 +1,7 @@
 require 'stringio'
 require 'test/unit'
 require 'rubygems'
-require 'ruby-debug'
+#require 'ruby-debug'
 require File.dirname(__FILE__) + '/../lib/bounce_email'
 
 def test_email(filename_no_ext, encoding=nil)
