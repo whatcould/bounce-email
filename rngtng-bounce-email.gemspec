@@ -8,10 +8,10 @@ Gem::Specification.new do |s|
   s.version = "0.0.3"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Agris Ameriks", "Pedro Visintin", "Tobias Bielohlawek"]
+  s.authors = ["Tobias Bielohlawek", "Agris Ameriks", "Pedro Visintin"]
   s.date = %q{2011-03-01}
-  s.description = %q{fork of wakiki/bounce-email working with mail gem and ruby 1.9}
-  s.email = %q{pedro.visintin@gmail.com}
+  s.description = %q{fork of whatcould/bounce-email incl. patches from wakiki and peterpunk for working with mail gem and ruby 1.9}
+  s.email = %q{tobi@rngtng.com}
   s.extra_rdoc_files = [
     "README.rdoc"
   ]
@@ -24,8 +24,8 @@ Gem::Specification.new do |s|
     "README.rdoc",
     "Rakefile",
     "VERSION",
-    "bounce-email.gemspec",
     "lib/bounce_email.rb",
+    "rngtng-bounce-email.gemspec",
     "script/console",
     "script/destroy",
     "script/generate",
