@@ -4,11 +4,11 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{bounce-email}
+  s.name = %q{rngtng-bounce-email}
   s.version = "0.0.3"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Agris Ameriks", "Pedro Visintin"]
+  s.authors = ["Agris Ameriks", "Pedro Visintin", "Tobias Bielohlawek"]
   s.date = %q{2011-03-01}
   s.description = %q{fork of wakiki/bounce-email working with mail gem and ruby 1.9}
   s.email = %q{pedro.visintin@gmail.com}
@@ -70,7 +70,7 @@ Gem::Specification.new do |s|
     "test/test_bounce_email.rb",
     "test/test_helper.rb"
   ]
-  s.homepage = %q{http://github.com/peterpunk/bounce-email}
+  s.homepage = %q{http://github.com/rngtng/bounce-email}
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.7}
   s.summary = %q{detect kind of bounced email}

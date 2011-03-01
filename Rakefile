@@ -3,12 +3,12 @@ require File.dirname(__FILE__) + '/lib/bounce_email'
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gemspec|
-    gemspec.name = "bounce-email"
+    gemspec.name = "rngtng-bounce-email"
     gemspec.summary = "detect kind of bounced email"
-    gemspec.description = "fork of wakiki/bounce-email working with mail gem and ruby 1.9"
-    gemspec.email = "pedro.visintin@gmail.com"
-    gemspec.homepage = "http://github.com/peterpunk/bounce-email"
-    gemspec.authors = ["Agris Ameriks", "Pedro Visintin"]
+    gemspec.description = "fork of whatcould/bounce-email incl. patches from wakiki and peterpunk for working with mail gem and ruby 1.9"
+    gemspec.email = "tobi@rngtng.com"
+    gemspec.homepage = "http://github.com/rngtng/bounce-email"
+    gemspec.authors = ["Tobias Bielohlawek", "Agris Ameriks", "Pedro Visintin"]
   end
   Jeweler::GemcutterTasks.new
 rescue LoadError
