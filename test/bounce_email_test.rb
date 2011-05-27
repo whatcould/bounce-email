@@ -8,12 +8,6 @@ class BounceEmailTest < Test::Unit::TestCase
     assert_equal BounceEmail::TYPE_HARD_FAIL, bounce.type
   end
 
-  def test_bounce_type_soft_fail
-    bounce = test_bounce('tt_bounce_10')
-    assert_equal '4.0.0', bounce.code, "Code should return 4.0.0, returns #{bounce.code}"
-    assert_equal BounceEmail::TYPE_SOFT_FAIL, bounce.type
-  end
-
   #  Specific tests
   def test_unrouteable_mail_domain
     bounce = test_bounce('tt_bounce_01')
@@ -56,9 +50,10 @@ class BounceEmailTest < Test::Unit::TestCase
     assert_equal '5.3.2', bounce.code
   end
 
-  def test_undefined_temporary_failure
+  def test_bounce_type_soft_fail
     bounce = test_bounce('tt_bounce_10')
-    assert_equal '4.0.0', bounce.code
+    assert_equal '4.0.0', bounce.code, "Code should return 4.0.0, returns #{bounce.code}"
+    assert_equal BounceEmail::TYPE_SOFT_FAIL, bounce.type
   end
 
   # Added because kept getting errors with malformed bounce messages
@@ -70,9 +65,27 @@ class BounceEmailTest < Test::Unit::TestCase
   # Added because kept getting errors with unknown code messages
   def test_unknown_code
     bounce = test_bounce('unknown_code_bounce_01')
-    assert bounce.is_bounce?
+    assert bounce.bounced?
     assert_equal 'unknown', bounce.code
     assert_equal BounceEmail::TYPE_HARD_FAIL, bounce.type
     assert_equal 'unknown', bounce.reason
   end
+
+  # test all other files
+  def test_all_bounces
+    path = File.join(File.dirname(__FILE__), 'bounces')
+    Dir[path + "/*.txt"].map do |file|
+      bounce = BounceEmail::Mail.new Mail.read(file)
+      assert bounce.bounced?, "#{file} failed"
+    end
+  end
+
+  def test_all_non_bounces
+    path = File.join(File.dirname(__FILE__), 'non_bounces')
+    Dir[path + "/*.txt"].map do |file|
+      non_bounce = BounceEmail::Mail.new Mail.read(file)
+      assert !non_bounce.bounced?, "#{file} failed"
+    end
+  end
+
 end

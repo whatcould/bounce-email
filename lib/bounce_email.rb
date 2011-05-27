@@ -1,9 +1,7 @@
 # encoding: UTF-8
-$:.unshift(File.dirname(__FILE__)) unless
-$:.include?(File.dirname(__FILE__)) || $:.include?(File.expand_path(File.dirname(__FILE__)))
+require 'mail'
 
 module BounceEmail
-  VERSION = '0.0.3'
   TYPE_HARD_FAIL = 'Permanent Failure'
   TYPE_SOFT_FAIL = 'Persistent Transient Failure'
   TYPE_SUCCESS   = 'Success'
@@ -13,35 +11,61 @@ module BounceEmail
   # For code formatting, see http://www.ietf.org/rfc/rfc3463.txt
   # Some Exchange servers format codes as "[...] #0.0.0>", see http://support.microsoft.com/kb/284204
 
-  #    I used quite much from http://www.phpclasses.org/browse/package/2691.html
-  require 'mail'
+  # I used quite much from http://www.phpclasses.org/browse/package/2691.html
   class Mail
-    def initialize(mail) # You have to pass TMail object
-      @mail = mail
+    def initialize(mail)
+      @mail = mail.is_a?(String) ? Mail.new(mail) : mail
+      begin
+        if mail.bounced? #fall back to bounce handling in Mail gem
+          @bounced = true
+          @diagnostic_code = mail.diagnostic_code
+          @error_status = mail.error_status
+        end
+      rescue
+        @bounced = @diagnostic_code = @error_status = nil
+      end
     end
 
-    def is_bounce?
-      @is_bounce ||= check_if_bounce(@mail)
+
+    def bounced?
+      @bounced ||= check_if_bounce(@mail)
+    end
+    alias_method :is_bounce?, :bounced? #to stay backwards compatible
+
+    def diagnostic_code
+      @diagnostic_code ||= get_reason_from_status_code(code)
+    end
+    alias_method :reason, :diagnostic_code #to stay backwards compatible
+
+    def error_status
+      @error_status ||= get_code(@mail)
+    end
+    alias_method :code, :error_status #to stay backwards compatible
+
+    #Streamline with Mail Gem methods
+    def final_recipien?
+      # IMPLEMENT ME!
+    end
+
+    def action
+      # IMPLEMENT ME!
+    end
+
+    def retryable?
+      # IMPLEMENT ME!
+    end
+
+
+    def type
+      @type ||= get_type_from_status_code(code)
     end
 
     def original_mail
       @original_mail ||= get_original_mail(@mail)
     end
 
-    def reason
-      @reason ||= get_reason_from_status_code(code)
-    end
-
-    def type
-      @type ||= get_type_from_status_code(code)
-    end
-
-    def code
-      @code ||= get_code(@mail)
-    end
 
     private
-
     def get_code(mail)
       return '97' if mail.subject.match(/delayed/i)
       return '98' if mail.subject.encode('utf-8').match(/(unzulässiger|unerlaubter) anhang/i)
