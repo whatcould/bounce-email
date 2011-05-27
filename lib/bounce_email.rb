@@ -42,19 +42,16 @@ module BounceEmail
     end
     alias_method :code, :error_status #to stay backwards compatible
 
-    #Streamline with Mail Gem methods
+=begin  #Streamline with Mail Gem methods - IMPLEMENT ME!
     def final_recipien?
-      # IMPLEMENT ME!
     end
 
     def action
-      # IMPLEMENT ME!
     end
 
     def retryable?
-      # IMPLEMENT ME!
     end
-
+=end
 
     def type
       @type ||= get_type_from_status_code(code)
@@ -64,6 +61,9 @@ module BounceEmail
       @original_mail ||= get_original_mail(@mail)
     end
 
+    def method_missing(m, *args)
+      @mail.send(m, *args)
+    end
 
     private
     def get_code(mail)

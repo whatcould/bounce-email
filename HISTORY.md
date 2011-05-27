@@ -1,3 +1,7 @@
+## 0.0.5 2011-05-25
+
+* forward message call to mail object if method is missing
+
 ## 0.0.4 2011-05-25
 
 * make use of bounce parsing in Mail gem

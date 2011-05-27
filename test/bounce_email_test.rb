@@ -88,4 +88,10 @@ class BounceEmailTest < Test::Unit::TestCase
     end
   end
 
+
+  def test_mail_methods_fallback
+    bounce = test_bounce('tt_bounce_10')
+    assert bounce.body
+    assert bounce.date
+  end
 end
