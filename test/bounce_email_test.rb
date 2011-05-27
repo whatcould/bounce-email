@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/test_helper.rb'
 
-class TestBounceEmail < Test::Unit::TestCase
+class BounceEmailTest < Test::Unit::TestCase
 
   def test_bounce_type_hard_fail
     bounce = test_bounce('tt_bounce_01')

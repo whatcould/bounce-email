@@ -1,6 +1,4 @@
-# A sample Gemfile
 source "http://rubygems.org"
 
-# gem "rails"
-
-gem 'mail'
+# Specify your gem's dependencies in bounce-email2.gemspec
+gemspec
