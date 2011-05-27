@@ -1,12 +1,9 @@
-## 0.0.5 2011-05-25
-
-* forward message call to mail object if method is missing
-
-## 0.0.4 2011-05-25
+## 0.1.0 2011-05-27
 
 * make use of bounce parsing in Mail gem
 * renamed method to be compatible with Mail Gem
 * more tests and cleanup
+* forward message call to mail object if method is missing
 * updated doc
 * gemspec cleanup
 

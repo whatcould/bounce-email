@@ -13,8 +13,12 @@ module BounceEmail
 
   # I used quite much from http://www.phpclasses.org/browse/package/2691.html
   class Mail
+    def self.read(filename)
+      Mail.new( ::Mail.read(filename) )
+    end
+
     def initialize(mail)
-      @mail = mail.is_a?(String) ? Mail.new(mail) : mail
+      @mail = mail.is_a?(String) ? ::Mail.new(mail) : mail
       begin
         if mail.bounced? #fall back to bounce handling in Mail gem
           @bounced = true
@@ -201,14 +205,12 @@ module BounceEmail
 
     def get_original_mail(mail) #worked alright for me, for sure this as to be extended
       parts = mail.body.split("--- Below this line is a copy of the message.\r\n\r\n")
-      return Mail.parse(parts.last) if parts.size > 1
-      begin
-        if mail.parts
-          body = mail.parts[2].body
-          return Mail.parse(body)
-        end
-      rescue => e
+      if parts.size > 1
+        ::Mail.new(parts.last)
+      elsif mail.parts
+        ::Mail.new(mail.parts[2].body)
       end
+    rescue => e
       nil
     end
 
