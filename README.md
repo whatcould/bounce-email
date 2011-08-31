@@ -2,7 +2,6 @@
 
 This Ruby library is for determining the bounce type of an email message. It determines whether the bounce is hard or soft, if is an "out of office mail", etc.
 
-
 ## SYNOPSIS:
 
 Follow this tutorial to handle bounce-emails: [http://keakaj.com/wisdom/2007/08/08/verp-on-rails](http://keakaj.com/wisdom/2007/08/08/verp-on-rails/)
@@ -22,20 +21,23 @@ Basic usage:
 
 ## REQUIREMENTS:
 
-Ruby 1.9 & Ruby Gem Mail is required
+Ruby 1.9 & Ruby Gem Mail is required. The gem is used for primary bounce handling, which catches about 50% of all bounces.
+For most other bounces, this gem comes in. See discussion here: [https://github.com/mikel/mail/issues/103](https://github.com/mikel/mail/issues/103)
+
+## Other implementations:
+
+  * (PERL) [https://github.com/rjbs/mail-deliverystatus-bounceparser](https://github.com/rjbs/mail-deliverystatus-bounceparser)
 
 
 ## TODO:
 
-* code cleanup!!! Oh yes!
-* don't hardcode comparison strings, move to external file which can be extended easily
-* more test: extend for more bounces
-* is OUT of office type needed? if yes implement as optional part
-* merge into Mail Gem??
+  * code cleanup!!! Oh yes!
+  * don't hardcode comparison strings, move to external file which can be extended easily
+  * more test: extend for more bounces
+  * is OUT of office type needed? if yes implement as optional part
+  * merge into Mail Gem??
 
 ## CONTRIBUTIONS:
-
-http://github.com/whatcould/bounce-email/tree/master
 
 Please fork on github & add new conditions under "get_status_from_text" if you discover creative new mailserver responses.
 

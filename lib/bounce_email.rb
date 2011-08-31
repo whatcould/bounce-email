@@ -32,7 +32,7 @@ module BounceEmail
 
 
     def bounced?
-      @bounced ||= check_if_bounce(@mail)
+      @bounced ||= check_if_bounce(@mail) || (diagnostic_code != "unknown") || (error_status != "unknown")
     end
     alias_method :is_bounce?, :bounced? #to stay backwards compatible
 

@@ -1,3 +1,7 @@
+## 0.1.1 2011-09-01
+* extended #bounced? to consider error_status and diagnostic_code as well
+* updated external gems
+
 ## 0.1.0 2011-05-27
 
 * make use of bounce parsing in Mail gem
