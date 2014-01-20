@@ -1,55 +1,93 @@
-$:.unshift(File.dirname(__FILE__)) unless
-$:.include?(File.dirname(__FILE__)) || $:.include?(File.expand_path(File.dirname(__FILE__)))
+# encoding: UTF-8
+require 'mail'
 
 module BounceEmail
-  VERSION = '0.0.2'
   TYPE_HARD_FAIL = 'Permanent Failure'
   TYPE_SOFT_FAIL = 'Persistent Transient Failure'
   TYPE_SUCCESS   = 'Success'
 
-  #qmail  
+  #qmail
   # Status codes are defined in rfc3463, http://www.ietf.org/rfc/rfc3463.txt
   # For code formatting, see http://www.ietf.org/rfc/rfc3463.txt
   # Some Exchange servers format codes as "[...] #0.0.0>", see http://support.microsoft.com/kb/284204
-  
-  #    I used quite much from http://www.phpclasses.org/browse/package/2691.html
-  require 'tmail'
+
+  # I used quite much from http://www.phpclasses.org/browse/package/2691.html
   class Mail
-    def initialize(mail) # You have to pass TMail object
-      @mail = mail
+    def self.read(filename)
+      Mail.new( ::Mail.read(filename) )
     end
 
-    def is_bounce?
-      @is_bounce ||= check_if_bounce(@mail)
+    def initialize(mail)
+      @mail = mail.is_a?(String) ? ::Mail.new(mail) : mail
+      begin
+        if mail.bounced? #fall back to bounce handling in Mail gem
+          @bounced = true
+          @diagnostic_code = mail.diagnostic_code
+          @error_status = mail.error_status
+        end
+      rescue
+        @bounced = @diagnostic_code = @error_status = nil
+      end
+    end
+
+
+    def bounced?
+      @bounced ||= check_if_bounce(@mail) || (diagnostic_code != "unknown") || (error_status != "unknown")
+    end
+    alias_method :is_bounce?, :bounced? #to stay backwards compatible
+
+    def diagnostic_code
+      @diagnostic_code ||= get_reason_from_status_code(code)
+    end
+    alias_method :reason, :diagnostic_code #to stay backwards compatible
+
+    def error_status
+      @error_status ||= get_code(@mail)
+    end
+    alias_method :code, :error_status #to stay backwards compatible
+
+=begin  #Streamline with Mail Gem methods - IMPLEMENT ME!
+    def final_recipien?
+    end
+
+    def action
+    end
+
+    def retryable?
+    end
+=end
+
+    def type
+      @type ||= get_type_from_status_code(code)
     end
 
     def original_mail
       @original_mail ||= get_original_mail(@mail)
     end
 
-    def reason
-      @reason ||= get_reason_from_status_code(code)
-    end
-
-    def type
-      @type ||= get_type_from_status_code(code)
-    end
-
-    def code
-      @code ||= get_code(@mail)
+    def method_missing(m, *args)
+      @mail.send(m, *args)
     end
 
     private
     def get_code(mail)
       return '97' if mail.subject.match(/delayed/i)
-      return '98' if mail.subject.match(/(unzulässiger|unerlaubter) anhang/i)
-      return '99' if mail.subject.match(/auto.*reply|vacation|vocation|(out|away).*office|on holiday|abwesenheits|autorespond|Automatische|eingangsbestätigung/i)
-      
+      return '98' if mail.subject.encode('utf-8').match(/(unzulässiger|unerlaubter) anhang/i)
+      return '99' if mail.subject.encode('utf-8').match(/auto.*reply|vacation|vocation|(out|away).*office|on holiday|abwesenheits|autorespond|Automatische|eingangsbestätigung/i)
+
       if mail.parts[1]
-        code = mail.parts[1].body.match(/(Status:.|550 |#)([245]\.[0-9]{1,3}\.[0-9]{1,3})/)[2]
+        match_parts = mail.parts[1].body.match(/(Status:.|550 |#)([245]\.[0-9]{1,3}\.[0-9]{1,3})/)
+        code = match_parts[2] if match_parts
         return code if code
       end
-      get_status_from_text(mail.body)
+
+      # Now try getting it from correct part of tmail
+      code = get_status_from_text(mail.body)
+      return code if code
+
+      # OK getting desperate so try getting code from entire email
+      code = get_status_from_text(mail.to_s)
+      code || 'unknown'
     end
 
     def get_status_from_text(email)
@@ -59,34 +97,35 @@ module BounceEmail
       # Big thanks goes to him
       # I transled them to Ruby and added some my parts
       #=end
-      return "5.1.1" if email.match(/no such (address|user)|Recipient address rejected|User unknown|does not like recipient|The recipient was unavailable to take delivery of the message|Sorry, no mailbox here by that name|invalid address|unknown user|unknown local part|user not found|invalid recipient|failed after I sent the message|did not reach the following recipient|nicht zugestellt werden/i)        
-      return "5.1.2" if email.match(/unrouteable mail domain|Esta casilla ha expirado por falta de uso|I couldn't find any host named/i)        
+      return "5.1.1" if email.match(/no such (address|user)|Recipient address rejected|User unknown|does not like recipient|The recipient was unavailable to take delivery of the message|Sorry, no mailbox here by that name|invalid address|unknown user|unknown local part|user not found|invalid recipient|failed after I sent the message|did not reach the following recipient|nicht zugestellt werden/i)
+      return "5.1.2" if email.match(/unrouteable mail domain|Esta casilla ha expirado por falta de uso|I couldn't find any host named/i)
       if email.match(/mailbox is full|Mailbox quota (usage|disk) exceeded|quota exceeded|Over quota|User mailbox exceeds allowed size|Message rejected\. Not enough storage space|user has exhausted allowed storage space|too many messages on the server|mailbox is over quota|mailbox exceeds allowed size/i) # AA added 4th or
-        return "5.2.2" if email.match(/This is a permanent error/i) # AA added this  
+        return "5.2.2" if email.match(/This is a permanent error/i) # AA added this
         return "4.2.2"
       end
       return "5.1.0" if email.match(/Address rejected/)
       return "4.1.2" if email.match(/I couldn't find any host by that name/)
-      return "4.2.0" if email.match(/not yet been delivered/i)        
-      return "5.2.0" if email.match(/mailbox unavailable|No such mailbox/i)        
-      return "5.4.4" if email.match(/Unrouteable address/i)        
-      return "4.4.7" if email.match(/retry timeout exceeded/i)        
-      return "5.2.0" if email.match(/The account or domain may not exist, they may be blacklisted, or missing the proper dns entries./i)        
-      return "5.5.4" if email.match(/554 TRANSACTION FAILED/i)        
+      return "4.2.0" if email.match(/not yet been delivered/i)
+      return "5.2.0" if email.match(/mailbox unavailable|No such mailbox/i)
+      return "5.4.4" if email.match(/Unrouteable address/i)
+      return "4.4.7" if email.match(/retry timeout exceeded/i)
+      return "5.2.0" if email.match(/The account or domain may not exist, they may be blacklisted, or missing the proper dns entries./i)
+      return "5.5.4" if email.match(/554 TRANSACTION FAILED/i)
       return "4.4.1" if email.match(/Status: 4.4.1|delivery temporarily suspended|wasn't able to establish an SMTP connection/i)
-      return "5.5.0" if email.match(/550 OU\-002|Mail rejected by Windows Live Hotmail for policy reasons/i)        
-      return "5.1.2" if email.match(/PERM_FAILURE: DNS Error: Domain name not found/i)        
-      return "4.2.0" if email.match(/Delivery attempts will continue to be made for/i)        
+      return "5.5.0" if email.match(/550 OU\-002|Mail rejected by Windows Live Hotmail for policy reasons/i)
+      return "5.1.2" if email.match(/PERM_FAILURE: DNS Error: Domain name not found/i)
+      return "4.2.0" if email.match(/Delivery attempts will continue to be made for/i)
       return "5.5.4" if email.match(/554 delivery error:/i)
-      return "5.1.1" if email.match(/550-5.1.1|This Gmail user does not exist/i)        
-      return "5.7.1" if email.match(/5.7.1 Your message.*?was blocked by ROTA DNSBL/i) # AA added        
-      return "5.3.2" if email.match(/Technical details of permanent failure|Too many bad recipients/i)  && (email.match(/The recipient server did not accept our requests to connect/i) || email.match(/Connection was dropped by remote host/i) || email.match(/Could not initiate SMTP conversation/i)) # AA added        
-      return "4.3.2" if email.match(/Technical details of temporary failure/i) && (email.match(/The recipient server did not accept our requests to connect/i) || email.match(/Connection was dropped by remote host/i) || email.match(/Could not initiate SMTP conversation/i)) # AA added        
+      return "5.1.1" if email.match(/550-5.1.1|This Gmail user does not exist/i)
+      return "5.7.1" if email.match(/5.7.1 Your message.*?was blocked by ROTA DNSBL/i) # AA added
+      return "5.3.2" if email.match(/Technical details of permanent failure|Too many bad recipients/i)  && (email.match(/The recipient server did not accept our requests to connect/i) || email.match(/Connection was dropped by remote host/i) || email.match(/Could not initiate SMTP conversation/i)) # AA added
+      return "4.3.2" if email.match(/Technical details of temporary failure/i) && (email.match(/The recipient server did not accept our requests to connect/i) || email.match(/Connection was dropped by remote host/i) || email.match(/Could not initiate SMTP conversation/i)) # AA added
       return "5.0.0" if email.match(/Delivery to the following recipient failed permanently/i) # AA added
       return '5.2.3' if email.match(/account closed|account has been disabled or discontinued|mailbox not found|prohibited by administrator|access denied|account does not exist/i)
     end
 
     def get_reason_from_status_code(code)
+      return 'unknown' if code.nil? or code == 'unknown'
       array = {}
       array['00'] =  "Other undefined status is the only undefined error code. It should be used for all errors for which only the class of the error is known."
       array['10'] =  "Something about the address specified in the message caused this DSN."
@@ -146,11 +185,12 @@ module BounceEmail
     end
 
     def get_type_from_status_code(code)
+      return TYPE_HARD_FAIL if code.nil? or code == 'unknown'
       pre_code = code[0].chr.to_i
-      array = {}      
+      array = {}
       array[5] = TYPE_HARD_FAIL
       array[4] = TYPE_SOFT_FAIL
-      array[2] = TYPE_SUCCESS      
+      array[2] = TYPE_SUCCESS
       return array[pre_code]
       "Error"
     end
@@ -165,14 +205,12 @@ module BounceEmail
 
     def get_original_mail(mail) #worked alright for me, for sure this as to be extended
       parts = mail.body.split("--- Below this line is a copy of the message.\r\n\r\n")
-      return TMail::Mail.parse(parts.last) if parts.size > 1
-      begin 
-        if mail.parts
-          body = mail.parts[2].body
-          return TMail::Mail.parse(body) 
-        end  
-      rescue => e
-      end      
+      if parts.size > 1
+        ::Mail.new(parts.last)
+      elsif mail.parts
+        ::Mail.new(mail.parts[2].body)
+      end
+    rescue => e
       nil
     end
 
